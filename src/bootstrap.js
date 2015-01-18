@@ -35,19 +35,26 @@ const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     Services.scriptloader.loadSubScript(src, global)))(this);
 
 function main(win) {
-    Services.console.logStringMessage("main");
+  Services.console.logStringMessage("main");
   let doc = win.document;
   let gBrowser = win.gBrowser;
   function $(id) doc.getElementById(id);
   function xul(type) doc.createElementNS(NS_XUL, type);
+  function tabKey(tab) {
+    var uri = tab.linkedBrowser.currentURI;
+    if (uri.asciiHost.length === 0) {
+      return uri.asciiSpec.toLowerCase();
+    }
+    return (uri.hostPort + uri.path).toLowerCase();
+  }
 
   var menuitem = xul("menuitem");
   menuitem.setAttribute("label", "Sort Tabs");
   menuitem.addEventListener("command", function() {
       var tabs = [];
       for (var i = gBrowser.tabs.length - 1; ~i; i--) tabs[i] = gBrowser.tabs[i];
-        tabs.sort(function(a, b) (
-            (a.label.toLowerCase() < b.label.toLowerCase()) ? -1 : 1))
+      tabs.sort(function(a, b) (
+        (tabKey(a) < tabKey(b)) ? -1 : 1))
         .forEach(gBrowser.moveTabTo.bind(gBrowser));
   }, true);
   $("tabContextMenu").insertBefore(menuitem, $("context_reloadAllTabs"));
